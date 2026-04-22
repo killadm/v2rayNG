@@ -86,11 +86,16 @@ jobs:
     - name: Check signing secrets
       id: signing
       shell: bash
+      env:
+        APP_KEYSTORE_BASE64: ${{ secrets.APP_KEYSTORE_BASE64 }}
+        APP_KEYSTORE_PASSWORD: ${{ secrets.APP_KEYSTORE_PASSWORD }}
+        APP_KEYSTORE_ALIAS: ${{ secrets.APP_KEYSTORE_ALIAS }}
+        APP_KEY_PASSWORD: ${{ secrets.APP_KEY_PASSWORD }}
       run: |
-        if [ -n "${{ secrets.APP_KEYSTORE_BASE64 }}" ] && \
-           [ -n "${{ secrets.APP_KEYSTORE_PASSWORD }}" ] && \
-           [ -n "${{ secrets.APP_KEYSTORE_ALIAS }}" ] && \
-           [ -n "${{ secrets.APP_KEY_PASSWORD }}" ]; then
+        if [ -n "${APP_KEYSTORE_BASE64}" ] && \
+           [ -n "${APP_KEYSTORE_PASSWORD}" ] && \
+           [ -n "${APP_KEYSTORE_ALIAS}" ] && \
+           [ -n "${APP_KEY_PASSWORD}" ]; then
           echo "mode=release" >> "$GITHUB_OUTPUT"
           echo "Installable release signing is enabled."
         else
@@ -131,6 +136,10 @@ jobs:
         echo "keyPassword=${KEY_PASSWORD}" >> "$GITHUB_OUTPUT"
 
     - name: Build APK
+      env:
+        APP_KEYSTORE_PASSWORD: ${{ secrets.APP_KEYSTORE_PASSWORD }}
+        APP_KEYSTORE_ALIAS: ${{ secrets.APP_KEYSTORE_ALIAS }}
+        APP_KEY_PASSWORD: ${{ secrets.APP_KEY_PASSWORD }}
       run: |
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
@@ -138,16 +147,16 @@ jobs:
         ./gradlew licenseFdroidReleaseReport
         if [ "${{ steps.signing.outputs.mode }}" = "release" ]; then
           ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
-            -Pandroid.injected.signing.store.password=${{ secrets.APP_KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.APP_KEYSTORE_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.APP_KEY_PASSWORD }}
+            "-Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }}" \
+            "-Pandroid.injected.signing.store.password=${APP_KEYSTORE_PASSWORD}" \
+            "-Pandroid.injected.signing.key.alias=${APP_KEYSTORE_ALIAS}" \
+            "-Pandroid.injected.signing.key.password=${APP_KEY_PASSWORD}"
         else
           ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=${{ steps.ci_keystore.outputs.filePath }} \
-            -Pandroid.injected.signing.store.password=${{ steps.ci_keystore.outputs.storePassword }} \
-            -Pandroid.injected.signing.key.alias=${{ steps.ci_keystore.outputs.keyAlias }} \
-            -Pandroid.injected.signing.key.password=${{ steps.ci_keystore.outputs.keyPassword }}
+            "-Pandroid.injected.signing.store.file=${{ steps.ci_keystore.outputs.filePath }}" \
+            "-Pandroid.injected.signing.store.password=${{ steps.ci_keystore.outputs.storePassword }}" \
+            "-Pandroid.injected.signing.key.alias=${{ steps.ci_keystore.outputs.keyAlias }}" \
+            "-Pandroid.injected.signing.key.password=${{ steps.ci_keystore.outputs.keyPassword }}"
         fi
     
     - name: Upload arm64-v8a APK
