@@ -338,6 +338,13 @@
     <string name="routing_settings_network">network</string>
     <string name="routing_settings_network_tip">[udp|tcp]</string>
     <string name="routing_settings_outbound_tag">outboundTag</string>
+    <string name="routing_settings_disable_on_wifi_ssids">連線這些 Wi‑Fi SSID 時停用此規則</string>
+    <string name="routing_settings_disable_on_wifi_ssids_tip">多個 SSID 用逗號分隔。連線到任一 Wi‑Fi 時將跳過此規則。</string>
+    <string name="routing_settings_fill_current_wifi">填入目前 Wi‑Fi</string>
+    <string name="routing_settings_disable_on_wifi_summary">Wi‑Fi 停用條件：%1$s</string>
+    <string name="routing_settings_current_wifi_not_connected">目前未連線至 Wi‑Fi</string>
+    <string name="routing_settings_current_wifi_location_disabled">請先開啟定位，再讀取目前 Wi‑Fi 名稱</string>
+    <string name="routing_settings_current_wifi_unavailable">無法讀取目前 Wi‑Fi 名稱</string>
 
     <string name="connection_test_pending">"測試連線能力"</string>
     <string name="connection_test_testing">"測試中……"</string>

@@ -64,6 +64,14 @@
                 android:lines="1"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
+            <TextView
+                android:id="@+id/disableOnWifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_spacing_dp8"
+                android:lines="1"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+
         </LinearLayout>
 
         <LinearLayout

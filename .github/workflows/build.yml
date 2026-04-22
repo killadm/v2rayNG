@@ -83,12 +83,52 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Check signing secrets
+      id: signing
+      shell: bash
+      run: |
+        if [ -n "${{ secrets.APP_KEYSTORE_BASE64 }}" ] && \
+           [ -n "${{ secrets.APP_KEYSTORE_PASSWORD }}" ] && \
+           [ -n "${{ secrets.APP_KEYSTORE_ALIAS }}" ] && \
+           [ -n "${{ secrets.APP_KEY_PASSWORD }}" ]; then
+          echo "mode=release" >> "$GITHUB_OUTPUT"
+          echo "Installable release signing is enabled."
+        else
+          echo "mode=ci" >> "$GITHUB_OUTPUT"
+          echo "Release signing secrets are missing. A temporary CI keystore will be generated so the APK remains installable."
+        fi
+
     - name: Decode Keystore
+      if: steps.signing.outputs.mode == 'release'
       uses: timheuer/base64-to-file@v1.2.4
       id: android_keystore
       with:
         fileName: "android_keystore.jks"
         encodedString: ${{ secrets.APP_KEYSTORE_BASE64 }}
+
+    - name: Generate CI keystore
+      if: steps.signing.outputs.mode == 'ci'
+      id: ci_keystore
+      shell: bash
+      run: |
+        KEYSTORE_PATH="${RUNNER_TEMP}/android_ci_keystore.jks"
+        STORE_PASSWORD="android"
+        KEY_ALIAS="androiddebugkey"
+        KEY_PASSWORD="android"
+        keytool -genkeypair \
+          -keystore "${KEYSTORE_PATH}" \
+          -storetype JKS \
+          -storepass "${STORE_PASSWORD}" \
+          -alias "${KEY_ALIAS}" \
+          -keypass "${KEY_PASSWORD}" \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -dname "CN=Android Debug,O=Android,C=US"
+        echo "filePath=${KEYSTORE_PATH}" >> "$GITHUB_OUTPUT"
+        echo "storePassword=${STORE_PASSWORD}" >> "$GITHUB_OUTPUT"
+        echo "keyAlias=${KEY_ALIAS}" >> "$GITHUB_OUTPUT"
+        echo "keyPassword=${KEY_PASSWORD}" >> "$GITHUB_OUTPUT"
 
     - name: Build APK
       run: |
@@ -96,7 +136,19 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         ./gradlew licenseFdroidReleaseReport
-        ./gradlew assembleRelease -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} -Pandroid.injected.signing.store.password=${{ secrets.APP_KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.APP_KEYSTORE_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.APP_KEY_PASSWORD }}
+        if [ "${{ steps.signing.outputs.mode }}" = "release" ]; then
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
+            -Pandroid.injected.signing.store.password=${{ secrets.APP_KEYSTORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.APP_KEYSTORE_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.APP_KEY_PASSWORD }}
+        else
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=${{ steps.ci_keystore.outputs.filePath }} \
+            -Pandroid.injected.signing.store.password=${{ steps.ci_keystore.outputs.storePassword }} \
+            -Pandroid.injected.signing.key.alias=${{ steps.ci_keystore.outputs.keyAlias }} \
+            -Pandroid.injected.signing.key.password=${{ steps.ci_keystore.outputs.keyPassword }}
+        fi
     
     - name: Upload arm64-v8a APK
       uses: actions/upload-artifact@v7

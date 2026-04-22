@@ -345,6 +345,13 @@
     <string name="routing_settings_network_tip">[udp|tcp]</string>
     <string name="routing_settings_outbound_tag_hint" translatable="false">proxy / direct / block / &lt;remarks&gt;</string>
     <string name="routing_settings_outbound_tag">outboundTag</string>
+    <string name="routing_settings_disable_on_wifi_ssids">Disable this rule on Wi-Fi SSIDs</string>
+    <string name="routing_settings_disable_on_wifi_ssids_tip">Comma-separated SSIDs. The rule is skipped when connected to any of them.</string>
+    <string name="routing_settings_fill_current_wifi">Use current Wi-Fi</string>
+    <string name="routing_settings_disable_on_wifi_summary">Disabled on Wi-Fi: %1$s</string>
+    <string name="routing_settings_current_wifi_not_connected">Not currently connected to Wi-Fi</string>
+    <string name="routing_settings_current_wifi_location_disabled">Turn on Location to read the current Wi-Fi name</string>
+    <string name="routing_settings_current_wifi_unavailable">Could not read the current Wi-Fi name</string>
 
     <string name="connection_test_pending">Check Connectivity</string>
     <string name="connection_test_testing">Testing…</string>
